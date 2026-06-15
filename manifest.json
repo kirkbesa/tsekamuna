@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "TsekaMuna",
+  "version": "0.1.0",
+  "description": "A browser-based nudge system that surfaces credibility signals on Facebook posts to reduce misinformation sharing among Filipino users.",
+
+  "permissions": [],
+
+  "content_scripts": [
+    {
+      "matches": ["*://*.facebook.com/*"],
+      "js": ["dist/content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

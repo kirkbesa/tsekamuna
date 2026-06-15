@@ -1,0 +1,3 @@
+/* TsekaMuna — Tailwind input file.
+   Only utilities are included to avoid overriding Facebook's own base styles. */
+@tailwind utilities;
