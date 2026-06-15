@@ -115,21 +115,30 @@ function injectPanel(postEl: HTMLElement, postData: PostData): void {
 
   // tsekamuna-panel is a custom marker class used for duplicate detection.
   // All visual styling is done with Tailwind utility classes.
-  panel.className = "tsekamuna-panel mx-3 my-2 p-3 rounded-lg border border-gray-200 bg-gray-50 font-sans text-sm text-gray-700";
+  panel.className = [
+    "tsekamuna-panel",
+    "p-3 border-t font-sans text-sm mt-1 rounded-md",
+    // light mode
+    "border-gray-200 bg-gray-50 text-gray-700",
+    // dark mode — follows OS prefers-color-scheme
+    "dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200",
+  ].join(" ");
 
   panel.innerHTML = `
     <div class="flex items-center justify-between mb-2">
-      <span class="text-blue-600 font-semibold text-sm">🔍 TsekaMuna</span>
-      <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+      <span class="text-blue-500 dark:text-blue-400 font-semibold text-sm">🔍 TsekaMuna</span>
+      <span class="text-xs font-semibold px-2 py-0.5 rounded-full
+                  bg-blue-100 text-blue-700
+                  dark:bg-blue-900 dark:text-blue-300">
         Analyzing…
       </span>
     </div>
     <div>
-      <p class="text-gray-500 text-xs mb-1">
-        Post by <strong class="text-gray-700">${escapeHtml(postData.author)}</strong>
-        ${postData.timestamp ? `<span class="text-gray-400">· ${escapeHtml(postData.timestamp)}</span>` : ""}
+      <p class="text-gray-500 dark:text-gray-400 text-xs mb-1">
+        Post by <strong class="text-gray-700 dark:text-gray-200">${escapeHtml(postData.author)}</strong>
+        ${postData.timestamp ? `<span class="text-gray-400 dark:text-gray-500">· ${escapeHtml(postData.timestamp)}</span>` : ""}
       </p>
-      <p class="text-gray-500 italic text-xs">${preview}</p>
+      <p class="text-gray-400 dark:text-gray-500 italic text-xs">${preview}</p>
     </div>
   `;
 
