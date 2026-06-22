@@ -1,0 +1,11 @@
+<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- speech bubble: a post you're about to share -->
+  <path d="M11 6 H37 a8 8 0 0 1 8 8 V28 a8 8 0 0 1 -8 8 H22 l-9 7 v-7 H11 a8 8 0 0 1 -8 -8 V14 a8 8 0 0 1 8 -8 Z"
+        fill="#103B3C"/>
+  <!-- check: verified / tseka -->
+  <path d="M14.5 21.5 L21 28 L34 14.5"
+        fill="none" stroke="#FBF8F1" stroke-width="4.4"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- the 'muna' beat: the gold attention ping -->
+  <circle cx="39.5" cy="9.5" r="4.5" fill="#E9A23B"/>
+</svg>
