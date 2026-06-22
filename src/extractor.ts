@@ -17,6 +17,29 @@ function extractText(el: HTMLElement): string {
   return clone.innerText.replace(/See less$/i, "").trim();
 }
 
+// Reads the profile name container and returns a cleaned-up author name plus
+// the verified-badge flag.
+//
+// Facebook appends a "· Follow" suffix on the profile name of algorithmically
+// suggested posts (posts from pages the user doesn't follow). We strip that
+// so the name displayed in the panel stays clean.
+//
+// The verified badge is rendered as an SVG with an aria-label containing the
+// word "verified" — we detect any element with that pattern inside the
+// profile name container.
+function extractAuthor(postEl: HTMLElement): { author: string; verified: boolean } {
+  const profileEl = postEl.querySelector<HTMLElement>("[data-ad-rendering-role='profile_name']");
+  if (!profileEl) return { author: "", verified: false };
+
+  const raw = profileEl.innerText?.trim() ?? "";
+  // Strip suffixes like " · Follow", "· Follow", "• Follow", " Follow"
+  const author = raw.replace(/\s*[·•]?\s*Follow\s*$/i, "").trim();
+
+  const verified = !!profileEl.querySelector('[aria-label*="erified" i]');
+
+  return { author, verified };
+}
+
 // Clicks the "See more" button inside a post if present, then waits for
 // Facebook's React re-render before resolving. Without the delay, innerText
 // still returns the truncated version.
@@ -42,10 +65,7 @@ export async function extractPostData(postEl: HTMLElement): Promise<PostData> {
   const msgEl = postEl.querySelector<HTMLElement>("[data-ad-preview='message']");
   const text = msgEl ? extractText(msgEl) : "";
 
-  const author =
-    postEl
-      .querySelector<HTMLElement>("[data-ad-rendering-role='profile_name']")
-      ?.innerText?.trim() ?? "";
+  const { author, verified } = extractAuthor(postEl);
 
   // All http/https links inside the post. Many will be Facebook redirect URLs
   // (l.facebook.com/l.php?u=...) wrapping the actual destination.
@@ -60,5 +80,5 @@ export async function extractPostData(postEl: HTMLElement): Promise<PostData> {
       .querySelector<HTMLElement>("a[href*='?__cft__'] span")
       ?.innerText?.trim() ?? "";
 
-  return { author, text, links, timestamp };
+  return { author, verified, text, links, timestamp };
 }

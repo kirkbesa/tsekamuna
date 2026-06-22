@@ -56,6 +56,16 @@ export function injectPanel(postEl: HTMLElement, postData: PostData, analysis: A
     "dark:border-gray-700 dark:bg-gray-900",
   ].join(" ");
 
+  // Truncated caption shown under the author line in the details block
+  const snippet =
+    postData.text.length > 140
+      ? postData.text.slice(0, 140).trim() + "…"
+      : postData.text;
+
+  const verifiedBadge = postData.verified
+    ? `<span class="text-blue-500 dark:text-blue-400 shrink-0" title="Verified">${icon("badgeCheck", "w-3.5 h-3.5")}</span>`
+    : "";
+
   panel.innerHTML = `
     <!-- Header: logo + overall risk badge -->
     <div class="flex items-center justify-between mb-2">
@@ -66,6 +76,25 @@ export function injectPanel(postEl: HTMLElement, postData: PostData, analysis: A
       <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${riskBadgeClasses(analysis.riskLevel)}">
         ${riskBadgeLabel(analysis.riskLevel)}
       </span>
+    </div>
+
+    <!-- Post details: author, verified badge, timestamp, caption snippet -->
+    <div class="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
+      <div class="flex items-center gap-1 mb-1 flex-wrap">
+        <span class="font-semibold text-xs text-gray-800 dark:text-gray-100">
+          ${escapeHtml(postData.author) || "Unknown author"}
+        </span>
+        ${verifiedBadge}
+        ${postData.timestamp ? `
+          <span class="text-gray-400 dark:text-gray-500 text-xs">·</span>
+          <span class="text-gray-500 dark:text-gray-400 text-xs">${escapeHtml(postData.timestamp)}</span>
+        ` : ""}
+      </div>
+      ${snippet ? `
+        <p class="text-[11px] italic text-gray-500 dark:text-gray-400 leading-snug">
+          "${escapeHtml(snippet)}"
+        </p>
+      ` : ""}
     </div>
 
     <!-- Risk score progress bar -->
