@@ -9,27 +9,32 @@ export interface PostData {
   timestamp: string; // relative time shown to the user (e.g. "3h", "1d")
 }
 
-// Possible verdicts for a single analysis module.
-// "safe"     — no concerns detected
-// "warning"  — mild concern, not necessarily misleading
-// "risk"     — strong indicator of low credibility
-// "pending"  — analysis still running (placeholder while wiring up modules)
-export type ModuleStatus = "safe" | "warning" | "risk" | "pending";
+// Module-level status — drives icon + color of the status indicator.
+// "clear"      — no concerns detected
+// "caution"    — mild concern, worth a look
+// "high"       — strong indicator of low credibility
+// "unverified" — no fact-check / cross-reference found (NOT "false")
+// "pending"    — analysis still running (scanning spinner)
+export type ModuleStatus = "clear" | "caution" | "high" | "unverified" | "pending";
 
 // Output of a single analysis module (linguistic, heuristic, or external).
 export interface ModuleResult {
   status: ModuleStatus;
-  summary: string;     // short verdict on the card (e.g. "Emotional language detected")
-  details: string[];   // bullet points shown inside the modal
+  summary: string;     // short verdict on the card (e.g. "Emosyonal, all-caps")
+  verdict: string;     // plain-language verdict for the popover header
+  details: string[];   // bullet points shown inside the popover
 }
 
-// Possible levels for the aggregated risk score.
-export type RiskLevel = "low" | "medium" | "high";
+// Aggregated risk level used by the verdict pill and the credibility reading.
+// "unverified" is its own state — never style it as "high". The research
+// requires this distinction.
+export type RiskLevel = "clear" | "caution" | "high" | "unverified";
 
 // Combined output across all modules + the aggregated risk score.
 export interface AnalysisResult {
   riskScore: number;          // 0-100, higher = riskier
   riskLevel: RiskLevel;
+  readout: string;            // one-line plain-language summary under the meter
   linguistic: ModuleResult;
   heuristic: ModuleResult;
   external: ModuleResult;

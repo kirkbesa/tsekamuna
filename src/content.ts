@@ -14,7 +14,7 @@ async function processPost(postEl: HTMLElement): Promise<void> {
 
   // Skip posts that already have a panel attached (prevents duplicates on
   // re-observation, e.g. when Facebook re-renders a post in place).
-  if (postEl.querySelector(".tsekamuna-panel")) return;
+  if (postEl.querySelector(".tm-card")) return;
 
   const postData = await extractPostData(postEl);
 

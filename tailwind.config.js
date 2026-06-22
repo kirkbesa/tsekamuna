@@ -4,9 +4,8 @@ module.exports = {
   // utilities actually used — keeps the output CSS small.
   content: ["./src/**/*.ts"],
 
-  // "media" uses the prefers-color-scheme CSS media query, so dark mode
-  // follows the user's OS setting automatically with no JS required.
-  darkMode: "media",
+  // Theming is now driven by --tm-* CSS variables that flip on a data-theme
+  // attribute (set by src/theme.ts). Tailwind's dark variant is unused.
 
   theme: {
     extend: {},

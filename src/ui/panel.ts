@@ -1,133 +1,163 @@
-// Builds and injects the TsekaMuna credibility panel into a post element.
-// The panel shows the aggregated risk score and three module cards that open
-// the global modal when clicked.
+// Builds and injects the TsekaMuna credibility card into a Facebook post.
+// Markup translated directly from src/branding/tsekamuna-brand.html so the
+// rendered output matches the brand reference 1:1.
+//
+// All styling lives in branding/components.css. This file only emits HTML and
+// wires up click handlers — no inline styles, no Tailwind color classes.
 
 import { icon, type IconName } from "../icons";
-import type { AnalysisResult, ModuleKey, ModuleResult, PostData } from "../types";
-import { escapeHtml, riskBadgeClasses, riskBadgeLabel, riskBarColor, statusVisual } from "./helpers";
-import { openModal } from "./modal";
+import { markSvg, wordmark } from "../mark";
+import { bindThemeToElement } from "../theme";
+import type {
+  AnalysisResult,
+  ModuleKey,
+  ModuleResult,
+  PostData,
+  RiskLevel,
+} from "../types";
+import { escapeHtml, statusIcon, verdictLabel } from "./helpers";
+import { openPopover } from "./modal";
 
 interface ModuleCardConfig {
   key: ModuleKey;
-  label: string;
+  /** Mono uppercase eyebrow label (English category from the research) */
+  labelEn: string;
+  /** Filipino display name shown larger underneath */
+  labelFil: string;
   iconName: IconName;
 }
 
 // Order here drives the left-to-right order of cards in the panel.
 const MODULES: ModuleCardConfig[] = [
-  { key: "linguistic", label: "Linguistic", iconName: "messageSquareText" },
-  { key: "heuristic",  label: "Heuristic",  iconName: "shieldCheck" },
-  { key: "external",   label: "External",   iconName: "globe" },
+  { key: "linguistic", labelEn: "Language",    labelFil: "Pananalita", iconName: "messageSquareText" },
+  { key: "heuristic",  labelEn: "Source",      labelFil: "Pinagmulan", iconName: "shieldCheck" },
+  { key: "external",   labelEn: "Cross-check", labelFil: "Tseke",      iconName: "globe" },
 ];
 
-// Renders a single module card HTML string. The data-module attribute is
-// read back by the click handler to look up which module was clicked.
-function renderModuleCard(cfg: ModuleCardConfig, result: ModuleResult): string {
-  const { iconName: statusIcon, color: statusColor } = statusVisual(result.status);
+// Build the 4-segment credibility reading. Each segment fills to a tinted
+// color depending on the overall risk level — clear fills 1 segment, caution
+// fills 2, high fills 3, unverified leaves all segments empty.
+function renderMeter(level: RiskLevel): string {
+  const fillCount = level === "clear" ? 1 : level === "caution" ? 2 : level === "high" ? 3 : 0;
+  const fillColor =
+    level === "clear" ? "var(--tm-clear)"
+      : level === "caution" ? "var(--tm-caution)"
+      : level === "high" ? "var(--tm-high)"
+      : "var(--tm-unverified)";
 
+  return Array.from({ length: 4 }, (_, i) => {
+    const bg = i < fillCount ? fillColor : "var(--tm-mist)";
+    return `<span class="tm-seg" style="background:${bg}"></span>`;
+  }).join("");
+}
+
+// Renders the status indicator inside a module card.
+// "pending" → the CSS spinner; anything else → a status icon tinted by state.
+function renderStatusIndicator(result: ModuleResult): string {
+  if (result.status === "pending") {
+    return `<span class="tm-scan" aria-label="Scanning"></span>`;
+  }
+  const name = statusIcon(result.status);
+  if (!name) return "";
+  return `<span class="tm-tick" data-state="${result.status}">${icon(name, "tm-tick")}</span>`;
+}
+
+// One module chip-card.
+function renderModuleCard(cfg: ModuleCardConfig, result: ModuleResult): string {
   return `
-    <button class="tsekamuna-module-card text-left flex-1 min-w-0 p-2 rounded-md border-none
-                  bg-blue-500/10 hover:bg-blue-500/20
-                  dark:bg-blue-400/10 dark:hover:bg-blue-400/20
-                  transition-colors cursor-pointer"
-            data-module="${cfg.key}">
-      <div class="flex items-center gap-1.5 mb-1">
-        <span class="text-gray-600 dark:text-gray-300">${icon(cfg.iconName, "w-3.5 h-3.5")}</span>
-        <span class="text-xs font-semibold text-gray-700 dark:text-gray-200">${cfg.label}</span>
+    <button class="tm-mod" data-module="${cfg.key}" type="button">
+      <div class="tm-mi">
+        <span class="ic">${icon(cfg.iconName, "")}</span>
+        <div class="titles">
+          <span class="tm-lab">${cfg.labelEn}</span>
+          <span class="tm-fil">${cfg.labelFil}</span>
+        </div>
       </div>
-      <div class="flex items-center gap-1">
-        <span class="${statusColor} shrink-0">${icon(statusIcon, "w-3 h-3")}</span>
-        <p class="text-[11px] text-gray-600 dark:text-gray-400 leading-tight">
-          ${escapeHtml(result.summary)}
-        </p>
+      <div class="tm-st">
+        ${renderStatusIndicator(result)}
+        <span>${escapeHtml(result.summary)}</span>
       </div>
     </button>
   `;
 }
 
-export function injectPanel(postEl: HTMLElement, postData: PostData, analysis: AnalysisResult): void {
-  if (postEl.querySelector(".tsekamuna-panel")) return;
+// Caption snippet shown in the post details section.
+function snippet(text: string): string {
+  if (text.length <= 140) return text;
+  return text.slice(0, 140).trim() + "…";
+}
 
-  const panel = document.createElement("div");
-  panel.className = [
-    "tsekamuna-panel",
-    "mt-2 p-3 rounded-2xl border font-sans",
-    "border-gray-200 bg-gray-50",
-    "dark:border-gray-700 dark:bg-gray-900",
-  ].join(" ");
+// Verified-badge icon used next to the author when Facebook marks the page.
+const VERIFIED_SVG = icon("badgeCheck", "verified");
 
-  // Truncated caption shown under the author line in the details block
-  const snippet =
-    postData.text.length > 140
-      ? postData.text.slice(0, 140).trim() + "…"
-      : postData.text;
+export function injectPanel(
+  postEl: HTMLElement,
+  postData: PostData,
+  analysis: AnalysisResult,
+): void {
+  if (postEl.querySelector(".tm-card")) return;
 
-  const verifiedBadge = postData.verified
-    ? `<span class="text-blue-500 dark:text-blue-400 shrink-0" title="Verified">${icon("badgeCheck", "w-3.5 h-3.5")}</span>`
-    : "";
+  const card = document.createElement("div");
+  card.className = "tm-scope tm-card";
+  // Theme attribute is set by bindThemeToElement below — light is the safe
+  // default if FB's background can't be measured (e.g. on document_idle race).
+  card.setAttribute("data-theme", "light");
 
-  panel.innerHTML = `
-    <!-- Header: logo + overall risk badge -->
-    <div class="flex items-center justify-between mb-2">
-      <div class="flex items-center gap-1.5">
-        <span class="text-blue-500 dark:text-blue-400">${icon("search", "w-4 h-4")}</span>
-        <span class="text-blue-500 dark:text-blue-400 font-semibold text-sm">TsekaMuna</span>
+  card.innerHTML = `
+    <!-- Header: mark + wordmark on the left, verdict pill on the right -->
+    <div class="tm-head">
+      <div class="tm-id">
+        ${markSvg(24)}
+        ${wordmark()}
       </div>
-      <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${riskBadgeClasses(analysis.riskLevel)}">
-        ${riskBadgeLabel(analysis.riskLevel)}
+      <span class="tm-pill" data-state="${analysis.riskLevel}">
+        <span class="dot"></span>${verdictLabel(analysis.riskLevel)}
       </span>
     </div>
 
-    <!-- Post details: author, verified badge, timestamp, caption snippet -->
-    <div class="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
-      <div class="flex items-center gap-1 mb-1 flex-wrap">
-        <span class="font-semibold text-xs text-gray-800 dark:text-gray-100">
-          ${escapeHtml(postData.author) || "Unknown author"}
-        </span>
-        ${verifiedBadge}
-        ${postData.timestamp ? `
-          <span class="text-gray-400 dark:text-gray-500 text-xs">·</span>
-          <span class="text-gray-500 dark:text-gray-400 text-xs">${escapeHtml(postData.timestamp)}</span>
-        ` : ""}
+    <div class="tm-body">
+      <!-- Post details (above the reading) -->
+      <div class="tm-postdetails">
+        <div class="author-row">
+          <span class="author">${escapeHtml(postData.author) || "Unknown author"}</span>
+          ${postData.verified ? VERIFIED_SVG : ""}
+          ${postData.timestamp
+            ? `<span class="meta">· ${escapeHtml(postData.timestamp)}</span>`
+            : ""}
+        </div>
+        ${postData.text
+          ? `<p class="snippet">"${escapeHtml(snippet(postData.text))}"</p>`
+          : ""}
       </div>
-      ${snippet ? `
-        <p class="text-[11px] italic text-gray-500 dark:text-gray-400 leading-snug">
-          "${escapeHtml(snippet)}"
-        </p>
-      ` : ""}
-    </div>
 
-    <!-- Risk score progress bar -->
-    <div class="mb-3">
-      <div class="flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400 mb-1">
-        <span>Risk Score</span>
-        <span>${analysis.riskScore}%</span>
+      <!-- Credibility reading: 4-segment meter + mono score -->
+      <div class="tm-meterrow">
+        <div class="tm-meter">${renderMeter(analysis.riskLevel)}</div>
+        <span class="tm-score">${analysis.riskScore}<small>/100</small></span>
       </div>
-      <div class="w-full h-1.5 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
-        <div class="h-full ${riskBarColor(analysis.riskLevel)} transition-all"
-            style="width: ${analysis.riskScore}%"></div>
-      </div>
-    </div>
+      <div class="tm-readout">${escapeHtml(analysis.readout)}</div>
 
-    <!-- Three module cards -->
-    <div class="flex gap-2">
-      ${MODULES.map((cfg) => renderModuleCard(cfg, analysis[cfg.key])).join("")}
+      <!-- Three module cards -->
+      <div class="tm-modules">
+        ${MODULES.map((cfg) => renderModuleCard(cfg, analysis[cfg.key])).join("")}
+      </div>
     </div>
   `;
 
-  // Wire up card clicks → open modal with that module's details
-  panel.querySelectorAll<HTMLElement>(".tsekamuna-module-card").forEach((card) => {
-    card.addEventListener("click", () => {
-      const moduleKey = card.dataset.module as ModuleKey;
+  // Wire each module card to open the popover with that module's details.
+  card.querySelectorAll<HTMLElement>(".tm-mod").forEach((cardBtn) => {
+    cardBtn.addEventListener("click", () => {
+      const moduleKey = cardBtn.dataset.module as ModuleKey;
       const cfg = MODULES.find((m) => m.key === moduleKey)!;
-      openModal({
-        moduleLabel: cfg.label + " Analysis",
-        iconName: cfg.iconName,
+      openPopover({
+        title: cfg.labelFil,
         result: analysis[moduleKey],
-        postData,
       });
     });
   });
 
-  postEl.appendChild(panel);
+  // Theme-bind so the card flips automatically when FB toggles dark mode.
+  bindThemeToElement(card);
+
+  postEl.appendChild(card);
 }

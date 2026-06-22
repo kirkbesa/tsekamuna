@@ -1,3 +1,14 @@
-/* TsekaMuna — Tailwind input file.
-   Only utilities are included to avoid overriding Facebook's own base styles. */
+/* TsekaMuna Tailwind input file.
+   Order matters:
+     1. Google Fonts — loaded once; only our .tm-scope elements use them, so
+        Facebook's own UI is unaffected.
+     2. Brand design tokens (CSS custom properties).
+     3. Brand component classes (translated from the brand HTML).
+     4. Tailwind utilities — kept for any one-off layout tweaks. */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+@import './branding/tokens.css';
+@import './branding/components.css';
+
 @tailwind utilities;

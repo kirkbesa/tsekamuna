@@ -1,83 +1,100 @@
-// Global details modal — one shared instance mounted once on document.body
-// and reused for every module card click across all post panels.
+// Signal detail popover — opened by clicking any module card in the credibility
+// panel. One global instance is mounted on document.body and reused; we just
+// repopulate its content per open call.
 
-import { icon, type IconName } from "../icons";
-import type { ModuleResult, PostData } from "../types";
-import { escapeHtml, statusVisual } from "./helpers";
+import { icon } from "../icons";
+import { bindThemeToElement } from "../theme";
+import type { ModuleResult } from "../types";
+import { escapeHtml, statusIcon } from "./helpers";
 
-export interface ModalContent {
-  moduleLabel: string;
-  iconName: IconName;
+export interface PopoverContent {
+  title: string;        // Filipino module name (e.g. "Pinagmulan")
   result: ModuleResult;
-  postData: PostData;
 }
 
-let modalEl: HTMLElement | null = null;
+let overlay: HTMLElement | null = null;
 
-// Lazily mounts the modal element on first use.
-// The Escape-key listener is registered once and persists for the page life.
-function ensureModalMounted(): HTMLElement {
-  if (modalEl) return modalEl;
+// Lazily mount the popover overlay on first use.
+function ensureMounted(): HTMLElement {
+  if (overlay) return overlay;
 
-  modalEl = document.createElement("div");
-  modalEl.id = "tsekamuna-modal";
-  modalEl.className = "fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50 p-4";
+  overlay = document.createElement("div");
+  overlay.className = "tm-scope tm-popover-overlay";
+  overlay.setAttribute("hidden", "");
 
-  // Close when clicking the backdrop (but not when clicking the dialog itself)
-  modalEl.addEventListener("click", (e) => {
-    if (e.target === modalEl) closeModal();
+  // Close when clicking the backdrop (but not when clicking the popover card)
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closePopover();
   });
 
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeModal();
+    if (e.key === "Escape") closePopover();
   });
 
-  document.body.appendChild(modalEl);
-  return modalEl;
+  document.body.appendChild(overlay);
+
+  // Bind theme so the popover mirrors FB's dark/light mode live.
+  bindThemeToElement(overlay);
+
+  return overlay;
 }
 
-export function openModal(content: ModalContent): void {
-  const el = ensureModalMounted();
-  const { iconName, color } = statusVisual(content.result.status);
+export function openPopover(content: PopoverContent): void {
+  const el = ensureMounted();
+  const { result, title } = content;
+
+  // Status icon for the header chip — pending falls back to scanning spinner.
+  const headerIcon = result.status === "pending"
+    ? `<span class="tm-scan" aria-label="Scanning"></span>`
+    : icon(statusIcon(result.status) ?? "info", "");
 
   el.innerHTML = `
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto"
-        role="dialog" aria-modal="true">
-      <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-        <div class="flex items-center gap-2">
-          <span class="${color}">${icon(content.iconName, "w-5 h-5")}</span>
-          <h2 class="font-semibold text-gray-800 dark:text-gray-100">${escapeHtml(content.moduleLabel)}</h2>
+    <div class="tm-pop" role="dialog" aria-modal="true" aria-labelledby="tm-pop-title">
+      <div class="tm-pop-h">
+        <div class="l">
+          <span class="ic" data-state="${result.status}">${headerIcon}</span>
+          <h4 id="tm-pop-title">${escapeHtml(title)}</h4>
         </div>
-        <button class="tsekamuna-modal-close bg-transparent border-none p-0 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-100 cursor-pointer"
-                aria-label="Close">
-          ${icon("x", "w-5 h-5")}
+        <button class="x" type="button" aria-label="Isara">
+          ${icon("x", "")}
         </button>
       </div>
-      <div class="p-4 space-y-3">
-        <div class="flex items-center gap-2">
-          <span class="${color} shrink-0">${icon(iconName, "w-5 h-5")}</span>
-          <p class="text-sm text-gray-700 dark:text-gray-200">${escapeHtml(content.result.summary)}</p>
-        </div>
-        <div>
-          <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
-            Details
-          </h3>
-          <ul class="space-y-1 text-sm text-gray-700 dark:text-gray-200 list-disc list-inside">
-            ${content.result.details.map((d) => `<li>${escapeHtml(d)}</li>`).join("")}
-          </ul>
-        </div>
+      <div class="tm-pop-b">
+        <p class="tm-verdict">
+          <b data-state="${result.status}">${escapeHtml(result.verdict.split(".")[0])}.</b>
+          ${escapeHtml(result.verdict.split(".").slice(1).join(".").trim())}
+        </p>
+        <ul class="tm-siglist">
+          ${result.details
+            .map(
+              (d) => `
+            <li>
+              <span class="bp" data-state="${result.status}"></span>
+              <span>${escapeHtml(d)}</span>
+            </li>`,
+            )
+            .join("")}
+        </ul>
+      </div>
+      <div class="tm-pop-f">
+        <button class="tm-btn ghost" type="button" data-close>Isara</button>
       </div>
     </div>
   `;
 
-  el.querySelector(".tsekamuna-modal-close")?.addEventListener("click", closeModal);
+  // Both close buttons (header X + footer "Isara") dismiss the popover.
+  el.querySelectorAll<HTMLElement>(".x, [data-close]").forEach((btn) => {
+    btn.addEventListener("click", closePopover);
+  });
 
-  el.classList.remove("hidden");
-  el.classList.add("flex");
+  el.removeAttribute("hidden");
+
+  // Focus the close button so Esc-to-close / Enter-to-dismiss works from
+  // the keyboard immediately.
+  el.querySelector<HTMLElement>(".x")?.focus();
 }
 
-export function closeModal(): void {
-  if (!modalEl) return;
-  modalEl.classList.add("hidden");
-  modalEl.classList.remove("flex");
+export function closePopover(): void {
+  if (!overlay) return;
+  overlay.setAttribute("hidden", "");
 }

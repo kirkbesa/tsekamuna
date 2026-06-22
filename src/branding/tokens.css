@@ -1,0 +1,87 @@
+/* TsekaMuna design tokens — BRANDING.md §9.
+  We can't use `:root` because the content script lives inside Facebook's page
+  and would pollute every other stylesheet. Tokens are scoped under .tm-scope
+  instead — every brand-styled root element (the card and the popover) carries
+   that class plus a data-theme attribute. */
+
+.tm-scope {
+  /* brand */
+  --tm-teal: #103B3C;
+  --tm-teal-600: #1C5A5B;
+  --tm-ink: #0B2122;
+  --tm-ink-2: #3C4A49;
+  --tm-ink-3: #6E7E7C;
+  --tm-gold: #E9A23B;
+  --tm-gold-soft: #F6E2BC;
+  --tm-paper: #FBF8F1;
+  --tm-surface: #F4EFE5;
+  --tm-mist: #ECE7DC;
+  --tm-line: #DED7C8;
+
+  /* risk scale */
+  --tm-clear: #2E8B6B;
+  --tm-caution: #E9A23B;
+  --tm-high: #DB5A45;
+  --tm-unverified: #6E7E7C;
+  --tm-clear-soft: #DCEFE6;
+  --tm-caution-soft: #F8E9CB;
+  --tm-high-soft: #F7DCD5;
+  --tm-unverified-soft: rgba(110, 126, 124, 0.16);
+
+  /* shape */
+  --tm-radius-card: 16px;
+  --tm-radius-inner: 12px;
+  --tm-radius-chip: 8px;
+  --tm-radius-pill: 999px;
+  --tm-shadow: 0 6px 24px -8px rgba(16, 59, 60, 0.22);
+  --tm-shadow-pop: 0 12px 40px -10px rgba(11, 33, 34, 0.30);
+  --tm-border: 1px solid var(--tm-line);
+
+  /* type */
+  --tm-display: 'Fraunces', Georgia, serif;
+  --tm-body: 'Hanken Grotesk', system-ui, sans-serif;
+  --tm-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* derived: pill text colors + mark on light */
+  --tm-paper-on-teal: #FBF8F1;
+  --tm-pill-text: #FBF8F1;
+  --tm-pill-caution-text: #3a2a08;
+  --tm-mark-bubble: #103B3C;
+  --tm-mark-check: #FBF8F1;
+}
+
+/* Dark mode — mirrors Facebook's dark theme. Validated for WCAG AA. */
+.tm-scope[data-theme="dark"] {
+  --tm-paper: #122424;
+  --tm-surface: #1A3132;
+  --tm-mist: #1C3334;
+  --tm-line: #284647;
+
+  --tm-ink: #EDEAE0;
+  --tm-ink-2: #B9C2BF;
+  --tm-ink-3: #8A9794;
+
+  --tm-teal: #7FD1C9;
+  --tm-gold: #F0B452;
+  --tm-paper-on-teal: #0B2122;
+
+  --tm-clear: #4FB08A;
+  --tm-caution: #F0B452;
+  --tm-high: #E87863;
+  --tm-unverified: #90A09D;
+
+  --tm-clear-soft: rgba(79, 176, 138, 0.16);
+  --tm-caution-soft: rgba(240, 180, 82, 0.16);
+  --tm-high-soft: rgba(232, 120, 99, 0.18);
+  --tm-unverified-soft: rgba(144, 160, 157, 0.16);
+
+  --tm-pill-text: #0B2122;
+  --tm-pill-caution-text: #241a05;
+
+  /* reversed mark on dark: light bubble + teal check */
+  --tm-mark-bubble: #F4EFE5;
+  --tm-mark-check: #103B3C;
+
+  --tm-shadow: 0 6px 24px -8px rgba(0, 0, 0, 0.5);
+  --tm-shadow-pop: 0 16px 48px -12px rgba(0, 0, 0, 0.6);
+}
