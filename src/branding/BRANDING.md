@@ -208,13 +208,31 @@ Plain, warm, bilingual (Taglish where natural). Sentence case. No jargon, no sco
   --tm-mono:'IBM Plex Mono',ui-monospace,monospace;
 }
 
-/* dark (Facebook dark mode) */
+/* dark (mirrors Facebook dark mode) — validated for WCAG AA */
 :root[data-theme="dark"]{
-  --tm-paper:#0E1C1C; --tm-surface:#15292A; --tm-mist:#1C3334;
-  --tm-ink:#EDEAE0; --tm-ink-2:#B9C2BF; --tm-ink-3:#8A9794; --tm-line:#244041;
-  --tm-teal:#7FD1C9; /* lighter for contrast on dark */
+  /* surfaces — deep teal-black, never pure #000 */
+  --tm-paper:#122424; --tm-surface:#1A3132; --tm-mist:#1C3334; --tm-line:#284647;
+  /* text */
+  --tm-ink:#EDEAE0; --tm-ink-2:#B9C2BF; --tm-ink-3:#8A9794;
+  /* brand — teal becomes a light mint for accents/headers/score on dark;
+     primary buttons use this mint as FILL with --tm-paper as text */
+  --tm-teal:#7FD1C9; --tm-gold:#F0B452; --tm-paper-on-teal:#0B2122;
+  /* risk — brightened for the dark surface */
+  --tm-clear:#4FB08A; --tm-caution:#F0B452; --tm-high:#E87863; --tm-unverified:#90A09D;
+  /* soft tints become low-alpha (the light pastels break on dark) */
+  --tm-clear-soft:rgba(79,176,138,.16);
+  --tm-caution-soft:rgba(240,180,82,.16);
+  --tm-high-soft:rgba(232,120,99,.18);
+  /* verdict pills: dark text on the brightened fills reads better than white */
+  --tm-pill-text:#0B2122;
+  /* logo: use the REVERSED mark on dark (light bubble + teal check) */
+  --tm-mark-bubble:#F4EFE5; --tm-mark-check:#103B3C;
+  --tm-shadow:0 6px 24px -8px rgba(0,0,0,.5);
+  --tm-shadow-pop:0 16px 48px -12px rgba(0,0,0,.6);
 }
 ```
+
+**Theming behaviour:** light is the default. The extension should detect Facebook's active theme (FB toggles a dark class / `data-theme` on the page) and set the matching attribute on the card root — the same components re-render from the variable set, no duplication. All risk colours are brightened on dark and verified to pass WCAG AA (body 13:1, accents 8–9:1, the warm coral 4.6:1). See **tsekamuna-darkmode.html** for both themes rendered side by side.
 
 ```json
 {

@@ -1,0 +1,168 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TsekaMuna — Light & Dark</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--disp:'Fraunces',Georgia,serif;--body:'Hanken Grotesk',system-ui,sans-serif;--mono:'IBM Plex Mono',monospace}
+body{font-family:var(--body);background:#EAE6DC;color:#0B2122;padding:28px 18px 60px;line-height:1.5}
+.head{max-width:1000px;margin:0 auto 26px}
+.head .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#6E7E7C}
+.head h1{font-family:var(--disp);font-weight:600;font-size:30px;color:#103B3C;letter-spacing:-.01em;margin:6px 0 6px}
+.head p{color:#3C4A49;max-width:64ch}
+
+.split{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:780px){.split{grid-template-columns:1fr}}
+
+/* ---- theme scopes: every color below comes from a var ---- */
+.panel{border-radius:20px;padding:18px;background:var(--fb-bg);transition:none}
+.theme-light{
+  --fb-bg:#E9EBEF; --fb-card:#fff; --fb-name:#1c1e21; --fb-meta:#65676b; --fb-text:#1c1e21; --fb-line:#eceef0; --fb-hl:#F6E2BC;
+  --paper:#FBF8F1; --surface:#F4EFE5; --mist:#ECE7DC; --line:#DED7C8;
+  --ink:#0B2122; --ink-2:#3C4A49; --ink-3:#6E7E7C;
+  --teal:#103B3C; --gold:#E9A23B; --paper-on-teal:#FBF8F1;
+  --clear:#2E8B6B; --caution:#E9A23B; --high:#DB5A45; --unverified:#6E7E7C;
+  --high-soft:#F7DCD5; --mark-bubble:#103B3C; --mark-check:#FBF8F1;
+  --shadow:0 6px 24px -8px rgba(16,59,60,.22); --shadow-pop:0 16px 48px -12px rgba(11,33,34,.34);
+  --pill-text:#FBF8F1; --pill-caution-text:#3a2a08;
+}
+.theme-dark{
+  --fb-bg:#18191A; --fb-card:#242526; --fb-name:#E4E6EB; --fb-meta:#B0B3B8; --fb-text:#E4E6EB; --fb-line:#3a3b3c; --fb-hl:#4a3a14;
+  --paper:#122424; --surface:#1A3132; --mist:#1C3334; --line:#284647;
+  --ink:#EDEAE0; --ink-2:#B9C2BF; --ink-3:#8A9794;
+  --teal:#7FD1C9; --gold:#F0B452; --paper-on-teal:#0B2122;
+  --clear:#4FB08A; --caution:#F0B452; --high:#E87863; --unverified:#90A09D;
+  --high-soft:rgba(232,120,99,.18); --mark-bubble:#F4EFE5; --mark-check:#103B3C;
+  --shadow:0 6px 24px -8px rgba(0,0,0,.5); --shadow-pop:0 16px 48px -12px rgba(0,0,0,.6);
+  --pill-text:#0B2122; --pill-caution-text:#241a05;
+}
+.theme-tag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  margin-bottom:12px;display:inline-flex;align-items:center;gap:7px;color:var(--ink-3)}
+.theme-tag .o{width:9px;height:9px;border-radius:50%;background:var(--gold)}
+
+/* fake facebook */
+.fbpost{background:var(--fb-card);border-radius:12px;padding:13px 15px;font-family:system-ui,sans-serif}
+.fbtop{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.fbav{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#9aa6b2,#6b7785);flex:none}
+.fbname{font-weight:700;font-size:13.5px;color:var(--fb-name)} .fbmeta{font-size:12px;color:var(--fb-meta)}
+.fbtext{font-size:13.5px;color:var(--fb-text);line-height:1.45} .fbtext b{background:var(--fb-hl);padding:0 2px;border-radius:3px}
+.fbbar{display:flex;gap:8px;margin-top:11px;padding-top:9px;border-top:1px solid var(--fb-line)}
+.fbbtn{flex:1;text-align:center;font-size:12.5px;font-weight:600;color:var(--fb-meta);padding:6px}
+
+/* tm card */
+.tm-card{background:var(--paper);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);margin-top:10px;overflow:hidden}
+.tm-head{display:flex;align-items:center;justify-content:space-between;padding:12px 15px;border-bottom:1px solid var(--line)}
+.tm-id{display:flex;align-items:center;gap:8px}
+.tm-id .wm{font-family:var(--disp);font-weight:600;font-size:15px}
+.tm-id .b{color:var(--teal)} .tm-id .g{color:var(--gold)}
+.pill{font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.05em;padding:5px 10px;border-radius:999px;
+  display:inline-flex;align-items:center;gap:6px;color:var(--pill-text)}
+.pill .dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.85}
+.pill.clear{background:var(--clear)} .pill.high{background:var(--high)}
+.pill.caution{background:var(--caution);color:var(--pill-caution-text)} .pill.unv{background:var(--unverified)}
+.tm-body{padding:15px}
+.meterrow{display:flex;align-items:center;gap:12px;margin-bottom:7px}
+.meter{flex:1;display:flex;gap:4px} .seg{height:8px;flex:1;border-radius:3px;background:var(--mist)}
+.score{font-family:var(--mono);font-weight:600;font-size:20px;color:var(--teal)} .score small{font-size:10px;color:var(--ink-3)}
+.readout{font-size:12.5px;color:var(--ink-2);margin-bottom:14px}
+.modules{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.mod{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px}
+.mod .mi{display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.mod .ic{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;background:var(--paper);border:1px solid var(--line)}
+.mod .ic svg{width:14px;height:14px} .mod .lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.mod .fil{font-size:12.5px;font-weight:600;color:var(--ink);line-height:1.1}
+.mod .st{font-size:11.5px;color:var(--ink-2);display:flex;align-items:center;gap:5px;margin-top:2px}
+.scan{width:9px;height:9px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--caution);animation:spin 1s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.scan{animation:none}}
+
+/* pre-share nudge */
+.nudge{background:var(--paper);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-pop);overflow:hidden;margin-top:16px}
+.band{height:7px;background:linear-gradient(90deg,var(--gold),color-mix(in srgb,var(--gold) 70%,#fff))}
+.nudge-b{padding:18px 18px 16px}
+.nudge h3{font-family:var(--disp);font-weight:600;font-size:22px;color:var(--teal);margin-bottom:7px}
+.nudge p{font-size:13px;color:var(--ink-2);margin-bottom:14px}
+.mini-meter{display:flex;gap:4px;margin-bottom:16px} .mini-meter .seg{height:6px}
+.nudge-actions{display:flex;gap:9px}
+.btn{font-family:var(--body);font-weight:600;font-size:13px;padding:10px;border-radius:9px;border:1px solid transparent;flex:1;text-align:center;cursor:pointer}
+.btn.primary{background:var(--teal);color:var(--paper-on-teal)} .btn.ghost{background:transparent;color:var(--ink-2);border-color:var(--line)}
+
+/* shared pills strip */
+.pills-strip{max-width:1000px;margin:22px auto 0;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:780px){.pills-strip{grid-template-columns:1fr}}
+.pills-box{border-radius:16px;padding:16px;background:var(--paper);border:1px solid var(--line)}
+.pills-box .row{display:flex;flex-wrap:wrap;gap:9px}
+.pills-box .cap{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-top:12px}
+
+.note{max-width:1000px;margin:26px auto 0;font-size:13px;color:#3C4A49;background:#FBF8F1;border:1px solid #DED7C8;border-radius:12px;padding:14px 16px}
+.note b{color:#103B3C}
+</style>
+
+<div class="head">
+  <span class="eyebrow">Theme · light &amp; dark</span>
+  <h1>The card matches the user’s Facebook theme</h1>
+  <p>Same tokens, two themes. Warm paper in light; a deep teal-black (not pure black) in dark, with the risk colours brightened just enough to stay legible and the gold signature carried through both.</p>
+</div>
+
+<div class="split">
+
+  <!-- LIGHT -->
+  <div class="panel theme-light">
+    <span class="theme-tag"><span class="o"></span>Light · default</span>
+    <div class="fbpost">
+      <div class="fbtop"><div class="fbav"></div><div><div class="fbname">Health Tips Pilipinas</div><div class="fbmeta">2h · 🌐</div></div></div>
+      <div class="fbtext">SHOCKING!! Ang <b>sili daw</b> ay nakakagamot ng cancer sa loob ng 3 araw!!!</div>
+      <div class="fbbar"><span class="fbbtn">👍 Like</span><span class="fbbtn">💬 Comment</span><span class="fbbtn" style="color:var(--teal)">↪ Share</span></div>
+    </div>
+    <div class="tm-card">
+      <div class="tm-head">
+        <div class="tm-id"><svg width="22" height="22" viewBox="0 0 48 48"><path d="M11 6H37a8 8 0 0 1 8 8V28a8 8 0 0 1-8 8H22l-9 7v-7H11a8 8 0 0 1-8-8V14a8 8 0 0 1 8-8Z" fill="var(--mark-bubble)"/><path d="M14.5 21.5 21 28 34 14.5" fill="none" stroke="var(--mark-check)" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="39.5" cy="9.5" r="4.5" fill="var(--gold)"/></svg><span class="wm"><span class="b">Tseka</span><span class="g">muna</span></span></div>
+        <span class="pill high"><span class="dot"></span>BE CAREFUL · MATAAS</span>
+      </div>
+      <div class="tm-body">
+        <div class="meterrow"><div class="meter"><span class="seg" style="background:var(--high)"></span><span class="seg" style="background:var(--high)"></span><span class="seg" style="background:var(--caution)"></span><span class="seg"></span></div><span class="score">74<small>/100</small></span></div>
+        <div class="readout">Mag-ingat — maraming senyales dito.</div>
+        <div class="modules">
+          <div class="mod"><div class="mi"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="var(--high)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><div><div class="lab">Language</div><div class="fil">Pananalita</div></div></div><div class="st">Emosyonal</div></div>
+          <div class="mod"><div class="mi"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="var(--high)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><div><div class="lab">Source</div><div class="fil">Pinagmulan</div></div></div><div class="st">Walang author</div></div>
+          <div class="mod"><div class="mi"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="var(--caution)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20"/></svg></span><div><div class="lab">Cross-check</div><div class="fil">Tseke</div></div></div><div class="st"><span class="scan"></span>Tinitingnan…</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="nudge"><div class="band"></div><div class="nudge-b"><h3>Tseka muna?</h3><p>Napansin namin ang ilang bagay sa post na ’to.</p><div class="mini-meter"><span class="seg" style="background:var(--high)"></span><span class="seg" style="background:var(--high)"></span><span class="seg" style="background:var(--caution)"></span><span class="seg"></span></div><div class="nudge-actions"><button class="btn primary">Tingnan muna</button><button class="btn ghost">I-share pa rin</button></div></div></div>
+  </div>
+
+  <!-- DARK -->
+  <div class="panel theme-dark">
+    <span class="theme-tag"><span class="o"></span>Dark · Facebook dark mode</span>
+    <div class="fbpost">
+      <div class="fbtop"><div class="fbav"></div><div><div class="fbname">Health Tips Pilipinas</div><div class="fbmeta">2h · 🌐</div></div></div>
+      <div class="fbtext">SHOCKING!! Ang <b>sili daw</b> ay nakakagamot ng cancer sa loob ng 3 araw!!!</div>
+      <div class="fbbar"><span class="fbbtn">👍 Like</span><span class="fbbtn">💬 Comment</span><span class="fbbtn" style="color:var(--teal)">↪ Share</span></div>
+    </div>
+    <div class="tm-card">
+      <div class="tm-head">
+        <div class="tm-id"><svg width="22" height="22" viewBox="0 0 48 48"><path d="M11 6H37a8 8 0 0 1 8 8V28a8 8 0 0 1-8 8H22l-9 7v-7H11a8 8 0 0 1-8-8V14a8 8 0 0 1 8-8Z" fill="var(--mark-bubble)"/><path d="M14.5 21.5 21 28 34 14.5" fill="none" stroke="var(--mark-check)" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="39.5" cy="9.5" r="4.5" fill="var(--gold)"/></svg><span class="wm"><span class="b">Tseka</span><span class="g">muna</span></span></div>
+        <span class="pill high"><span class="dot"></span>BE CAREFUL · MATAAS</span>
+      </div>
+      <div class="tm-body">
+        <div class="meterrow"><div class="meter"><span class="seg" style="background:var(--high)"></span><span class="seg" style="background:var(--high)"></span><span class="seg" style="background:var(--caution)"></span><span class="seg"></span></div><span class="score">74<small>/100</small></span></div>
+        <div class="readout">Mag-ingat — maraming senyales dito.</div>
+        <div class="modules">
+          <div class="mod"><div class="mi"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="var(--high)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><div><div class="lab">Language</div><div class="fil">Pananalita</div></div></div><div class="st">Emosyonal</div></div>
+          <div class="mod"><div class="mi"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="var(--high)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><div><div class="lab">Source</div><div class="fil">Pinagmulan</div></div></div><div class="st">Walang author</div></div>
+          <div class="mod"><div class="mi"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="var(--caution)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20"/></svg></span><div><div class="lab">Cross-check</div><div class="fil">Tseke</div></div></div><div class="st"><span class="scan"></span>Tinitingnan…</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="nudge"><div class="band"></div><div class="nudge-b"><h3>Tseka muna?</h3><p>Napansin namin ang ilang bagay sa post na ’to.</p><div class="mini-meter"><span class="seg" style="background:var(--high)"></span><span class="seg" style="background:var(--high)"></span><span class="seg" style="background:var(--caution)"></span><span class="seg"></span></div><div class="nudge-actions"><button class="btn primary">Tingnan muna</button><button class="btn ghost">I-share pa rin</button></div></div></div>
+  </div>
+</div>
+
+<!-- pills in both -->
+<div class="pills-strip">
+  <div class="theme-light"><div class="pills-box"><div class="row"><span class="pill clear"><span class="dot"></span>MABABA</span><span class="pill caution"><span class="dot"></span>MAG-INGAT</span><span class="pill high"><span class="dot"></span>MATAAS</span><span class="pill unv"><span class="dot"></span>DI MATUKOY</span></div><div class="cap">Verdict pills — light</div></div></div>
+  <div class="theme-dark"><div class="pills-box"><div class="row"><span class="pill clear"><span class="dot"></span>MABABA</span><span class="pill caution"><span class="dot"></span>MAG-INGAT</span><span class="pill high"><span class="dot"></span>MATAAS</span><span class="pill unv"><span class="dot"></span>DI MATUKOY</span></div><div class="cap">Verdict pills — dark</div></div></div>
+</div>
+
+<div class="note"><b>How it should switch:</b> the extension reads Facebook’s active theme (FB sets <code>html[data-theme]</code> / a dark class) and mirrors it, so the card never clashes with the feed. In code, that’s one attribute on the card root toggling the variable set — no duplicated components. Tokens for both are in <b>BRANDING.md §9</b>.</div>
