@@ -5,6 +5,7 @@
 // values needed to render (icon names, bilingual labels, raw state strings).
 
 import type { IconName } from "../icons";
+import type { Lang } from "../lang";
 import type { ModuleStatus, RiskLevel } from "../types";
 
 // Escapes HTML special characters so user-supplied text can be safely inserted
@@ -28,13 +29,22 @@ export function statusIcon(status: ModuleStatus): IconName | null {
   }
 }
 
-// Bilingual label pair used in the verdict pill (e.g. "BE CAREFUL · MATAAS").
-// Mono, uppercase — set in CSS, but the string itself is the source of truth.
-export function verdictLabel(level: RiskLevel): string {
+// Verdict pill text, single-language — switches with the active display
+// language instead of always pairing English + Filipino. Mono, uppercase —
+// set in CSS, but the string itself is the source of truth.
+export function verdictLabel(level: RiskLevel, lang: Lang): string {
+  if (lang === "en") {
+    switch (level) {
+      case "clear":      return "LOOKS CLEAR";
+      case "caution":    return "WORTH A LOOK";
+      case "high":       return "BE CAREFUL";
+      case "unverified": return "UNVERIFIED";
+    }
+  }
   switch (level) {
-    case "clear":      return "LOOKS CLEAR · MABABA";
-    case "caution":    return "WORTH A LOOK · MAG-INGAT";
-    case "high":       return "BE CAREFUL · MATAAS";
-    case "unverified": return "UNVERIFIED · DI MATUKOY";
+    case "clear":      return "MUKHANG OKAY";
+    case "caution":    return "MAG-INGAT";
+    case "high":       return "MATAAS ANG RISK";
+    case "unverified": return "DI MATUKOY";
   }
 }

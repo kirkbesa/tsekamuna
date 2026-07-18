@@ -5,7 +5,9 @@
 // All styling lives in branding/components.css. This file only emits HTML and
 // wires up click handlers — no inline styles, no Tailwind color classes.
 
+import { analyzePost } from "../analyzer";
 import { icon, type IconName } from "../icons";
+import { getLang, onLangChange, setLang, type Lang } from "../lang";
 import { markSvg, wordmark } from "../mark";
 import { bindThemeToElement } from "../theme";
 import type {
@@ -33,6 +35,39 @@ const MODULES: ModuleCardConfig[] = [
   { key: "heuristic",  labelEn: "Source",      labelFil: "Pinagmulan", iconName: "shieldCheck" },
   { key: "external",   labelEn: "Cross-check", labelFil: "Tseke",      iconName: "globe" },
 ];
+
+// UI chrome strings that switch with the active display language. The two
+// bilingual module labels above are a deliberate brand pairing (always shown
+// together) and are NOT part of this — only single-language chrome is.
+const STRINGS: Record<Lang, {
+  settings: string;
+  language: string;
+  collapse: string;
+  expand: string;
+}> = {
+  en:  { settings: "Settings", language: "Language", collapse: "Collapse", expand: "Expand" },
+  fil: { settings: "Mga Setting", language: "Wika", collapse: "I-collapse", expand: "I-expand" },
+};
+
+// Close any open per-post settings menu when the pointer lands outside it, or
+// on Escape. One pair of document-level listeners shared across every card
+// (registered once, at module load) instead of one per card — Facebook feeds
+// can mount hundreds of cards per session, so per-card document listeners
+// would leak.
+function closeOpenSettingsMenus(): void {
+  document.querySelectorAll<HTMLElement>(".tm-settings-menu:not([hidden])").forEach((menu) => {
+    menu.setAttribute("hidden", "");
+    menu.parentElement?.querySelector(".tm-settings-btn")?.setAttribute("aria-expanded", "false");
+  });
+}
+document.addEventListener("click", (e) => {
+  document.querySelectorAll<HTMLElement>(".tm-settings-menu:not([hidden])").forEach((menu) => {
+    if (!menu.parentElement?.contains(e.target as Node)) closeOpenSettingsMenus();
+  });
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeOpenSettingsMenus();
+});
 
 // Build the 4-segment credibility reading. Each segment fills to a tinted
 // color depending on the overall risk level — clear fills 1 segment, caution
@@ -103,57 +138,137 @@ export function injectPanel(
   // default if FB's background can't be measured (e.g. on document_idle race).
   card.setAttribute("data-theme", "light");
 
-  card.innerHTML = `
-    <!-- Header: mark + wordmark on the left, verdict pill on the right -->
-    <div class="tm-head">
-      <div class="tm-id">
-        ${markSvg(24)}
-        ${wordmark()}
-      </div>
-      <span class="tm-pill" data-state="${analysis.riskLevel}">
-        <span class="dot"></span>${verdictLabel(analysis.riskLevel)}
-      </span>
-    </div>
+  // Local render state. `lang` and `collapsed` persist across re-renders
+  // (re-renders happen on language change; collapse is toggled directly
+  // without a full re-render, but the flag is kept here so a language
+  // switch doesn't silently re-expand a card the user collapsed).
+  let lang = getLang();
+  let currentAnalysis = analysis;
+  let collapsed = false;
 
-    <div class="tm-body">
-      <!-- Post details (above the reading) -->
-      <div class="tm-postdetails">
-        <div class="author-row">
-          <span class="author">${escapeHtml(postData.author) || "Unknown author"}</span>
-          ${postData.verified ? VERIFIED_SVG : ""}
-          ${postData.timestamp
-            ? `<span class="meta">· ${escapeHtml(postData.timestamp)}</span>`
+  function render(): void {
+    const t = STRINGS[lang];
+
+    card.innerHTML = `
+      <!-- Header: mark + wordmark on the left, controls on the right -->
+      <div class="tm-head">
+        <div class="tm-id">
+          ${markSvg(24)}
+          ${wordmark()}
+        </div>
+        <div class="tm-headctl">
+          <span class="tm-pill" data-state="${currentAnalysis.riskLevel}">
+            <span class="dot"></span>${verdictLabel(currentAnalysis.riskLevel, lang)}
+          </span>
+          <div class="tm-settings">
+            <button class="tm-iconbtn tm-settings-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="${t.settings}">
+              ${icon("settings", "")}
+            </button>
+            <div class="tm-settings-menu" hidden>
+              <div class="tm-settings-label">${t.language}</div>
+              <button class="tm-langopt" type="button" data-lang="fil" aria-pressed="${lang === "fil"}">Filipino</button>
+              <button class="tm-langopt" type="button" data-lang="en" aria-pressed="${lang === "en"}">English</button>
+            </div>
+          </div>
+          <button class="tm-iconbtn tm-collapse" type="button" aria-expanded="${!collapsed}" aria-label="${collapsed ? t.expand : t.collapse}">
+            ${icon("chevronDown", "")}
+          </button>
+        </div>
+      </div>
+
+      <div class="tm-body"${collapsed ? " hidden" : ""}>
+        <!-- Post details (above the reading) -->
+        <div class="tm-postdetails">
+          <div class="author-row">
+            <span class="author">${escapeHtml(postData.author) || "Unknown author"}</span>
+            ${postData.verified ? VERIFIED_SVG : ""}
+            ${postData.timestamp
+              ? `<span class="meta">· ${escapeHtml(postData.timestamp)}</span>`
+              : ""}
+          </div>
+          ${postData.text
+            ? `<p class="snippet">"${escapeHtml(snippet(postData.text))}"</p>`
             : ""}
         </div>
-        ${postData.text
-          ? `<p class="snippet">"${escapeHtml(snippet(postData.text))}"</p>`
-          : ""}
-      </div>
 
-      <!-- Credibility reading: 4-segment meter + mono score -->
-      <div class="tm-meterrow">
-        <div class="tm-meter">${renderMeter(analysis.riskLevel)}</div>
-        <span class="tm-score">${analysis.riskScore}<small>/100</small></span>
-      </div>
-      <div class="tm-readout">${escapeHtml(analysis.readout)}</div>
+        <!-- Credibility reading: 4-segment meter + mono score -->
+        <div class="tm-meterrow">
+          <div class="tm-meter">${renderMeter(currentAnalysis.riskLevel)}</div>
+          <span class="tm-score">${currentAnalysis.riskScore}<small>/100</small></span>
+        </div>
+        <div class="tm-readout">${escapeHtml(currentAnalysis.readout)}</div>
 
-      <!-- Three module cards -->
-      <div class="tm-modules">
-        ${MODULES.map((cfg) => renderModuleCard(cfg, analysis[cfg.key])).join("")}
+        <!-- Three module cards -->
+        <div class="tm-modules">
+          ${MODULES.map((cfg) => renderModuleCard(cfg, currentAnalysis[cfg.key])).join("")}
+        </div>
       </div>
-    </div>
-  `;
+    `;
 
-  // Wire each module card to open the popover with that module's details.
-  card.querySelectorAll<HTMLElement>(".tm-mod").forEach((cardBtn) => {
-    cardBtn.addEventListener("click", () => {
-      const moduleKey = cardBtn.dataset.module as ModuleKey;
-      const cfg = MODULES.find((m) => m.key === moduleKey)!;
-      openPopover({
-        title: cfg.labelFil,
-        result: analysis[moduleKey],
+    wireEvents();
+  }
+
+  function wireEvents(): void {
+    // Wire each module card to open the popover with that module's details.
+    card.querySelectorAll<HTMLElement>(".tm-mod").forEach((cardBtn) => {
+      cardBtn.addEventListener("click", () => {
+        const moduleKey = cardBtn.dataset.module as ModuleKey;
+        const cfg = MODULES.find((m) => m.key === moduleKey)!;
+        openPopover({
+          title: lang === "en" ? cfg.labelEn : cfg.labelFil,
+          result: currentAnalysis[moduleKey],
+        });
       });
     });
+
+    // Collapse/expand — toggled directly (no re-render) so it's instant and
+    // doesn't disturb scroll position or the settings menu.
+    const collapseBtn = card.querySelector<HTMLElement>(".tm-collapse")!;
+    collapseBtn.addEventListener("click", () => {
+      collapsed = !collapsed;
+      const body = card.querySelector<HTMLElement>(".tm-body")!;
+      body.hidden = collapsed;
+      card.setAttribute("data-collapsed", String(collapsed));
+      collapseBtn.setAttribute("aria-expanded", String(!collapsed));
+      collapseBtn.setAttribute("aria-label", collapsed ? STRINGS[lang].expand : STRINGS[lang].collapse);
+    });
+    card.setAttribute("data-collapsed", String(collapsed));
+
+    // Settings gear toggles the language dropdown.
+    const settingsBtn = card.querySelector<HTMLElement>(".tm-settings-btn")!;
+    const menu = card.querySelector<HTMLElement>(".tm-settings-menu")!;
+    settingsBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const willOpen = menu.hasAttribute("hidden");
+      closeOpenSettingsMenus(); // close any other card's open menu first
+      if (willOpen) menu.removeAttribute("hidden");
+      settingsBtn.setAttribute("aria-expanded", String(willOpen));
+    });
+
+    // Language options inside the dropdown.
+    menu.querySelectorAll<HTMLButtonElement>(".tm-langopt").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        menu.setAttribute("hidden", "");
+        settingsBtn.setAttribute("aria-expanded", "false");
+        setLang(btn.dataset.lang as Lang); // triggers this card's onLangChange below
+      });
+    });
+  }
+
+  render();
+
+  // Re-render in the new language whenever the user switches it from any
+  // card's settings dropdown. Unsubscribes lazily the first time this card
+  // is no longer in the DOM (e.g. removed by Facebook's feed virtualization)
+  // so the listener set doesn't grow unbounded while scrolling.
+  const unsubscribe = onLangChange((newLang) => {
+    if (!card.isConnected) {
+      unsubscribe();
+      return;
+    }
+    lang = newLang;
+    currentAnalysis = analyzePost(postData, newLang);
+    render();
   });
 
   // Theme-bind so the card flips automatically when FB toggles dark mode.

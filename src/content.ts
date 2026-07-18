@@ -3,6 +3,7 @@
 
 import { analyzePost } from "./analyzer";
 import { extractPostData } from "./extractor";
+import { getLang } from "./lang";
 import { injectPanel } from "./ui/panel";
 
 // Runs the full pipeline for a single post: skip guards → extract data
@@ -22,7 +23,7 @@ async function processPost(postEl: HTMLElement): Promise<void> {
   // and on posts that contain only an emoji or sticker.
   if (!postData.text) return;
 
-  const analysis = analyzePost(postData);
+  const analysis = analyzePost(postData, getLang());
   injectPanel(postEl, postData, analysis);
 
   console.log("[TsekaMuna] Post processed:", { postData, analysis });

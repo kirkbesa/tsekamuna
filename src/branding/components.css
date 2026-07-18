@@ -50,6 +50,108 @@
 .tm-id .wm .b { color: var(--tm-teal); }
 .tm-id .wm .g { color: var(--tm-gold); }
 
+/* Right-hand header controls: verdict pill, settings, collapse toggle. */
+.tm-headctl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Shared icon-only button (settings gear, collapse chevron). */
+.tm-iconbtn {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  border: var(--tm-border);
+  background: var(--tm-surface);
+  color: var(--tm-ink-3);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+  flex: none;
+}
+
+.tm-iconbtn:hover { color: var(--tm-ink); }
+
+.tm-iconbtn:focus-visible {
+  outline: 2px solid var(--tm-teal);
+  outline-offset: 2px;
+}
+
+.tm-iconbtn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.tm-collapse svg { transition: transform 150ms ease; }
+
+/* Chevron points up when the body is visible, down when collapsed. */
+.tm-card[data-collapsed="true"] .tm-collapse svg { transform: rotate(-90deg); }
+
+/* Settings gear + its language dropdown. */
+.tm-settings {
+  position: relative;
+}
+
+.tm-settings-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 140px;
+  background: var(--tm-paper);
+  border: var(--tm-border);
+  border-radius: var(--tm-radius-inner);
+  box-shadow: var(--tm-shadow-pop);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 5;
+}
+
+.tm-settings-menu[hidden] { display: none; }
+
+.tm-settings-label {
+  font-family: var(--tm-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+  font-weight: 500;
+  padding: 4px 8px 6px;
+}
+
+.tm-langopt {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  font-family: var(--tm-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--tm-ink-2);
+  background: transparent;
+  border: none;
+  border-radius: var(--tm-radius-chip);
+  padding: 7px 8px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.tm-langopt:hover { background: var(--tm-surface); }
+
+.tm-langopt:focus-visible {
+  outline: 2px solid var(--tm-teal);
+  outline-offset: 2px;
+}
+
+.tm-langopt[aria-pressed="true"] {
+  color: var(--tm-teal);
+  font-weight: 600;
+  background: var(--tm-clear-soft);
+}
+
 /* Verdict pill — driven by data-state to map onto the risk scale. */
 .tm-pill {
   font-family: var(--tm-mono);
@@ -82,6 +184,11 @@
 .tm-body {
   padding: 16px;
 }
+
+/* Explicit — Facebook's own global stylesheet resets can neutralize the
+   native [hidden] behavior, same reason .tm-popover-overlay[hidden] below
+   sets display explicitly instead of relying on the UA default. */
+.tm-body[hidden] { display: none; }
 
 /* Credibility reading: 4-segment meter + mono score */
 .tm-meterrow {
