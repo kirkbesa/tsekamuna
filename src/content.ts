@@ -1,7 +1,7 @@
 // TsekaMuna — Content Script entry point.
 // Bootstraps the feed observer that processes each Facebook post as it loads.
 
-import { analyzePost } from "./analyzer";
+import { analyzePost, classifyHealthContent } from "./analyzer";
 import { extractPostData } from "./extractor";
 import { getLang } from "./lang";
 import { injectPanel } from "./ui/panel";
@@ -22,6 +22,9 @@ async function processPost(postEl: HTMLElement): Promise<void> {
   // Skip posts with no readable text — avoids noise on pure image/video posts
   // and on posts that contain only an emoji or sticker.
   if (!postData.text) return;
+
+  // Scope the extension to health content: non-health posts get no panel.
+  if (!classifyHealthContent(postData)) return;
 
   const analysis = analyzePost(postData, getLang());
   injectPanel(postEl, postData, analysis);
