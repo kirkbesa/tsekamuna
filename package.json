@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "description": "Browser extension nudge system for reducing misinformation sharing on Facebook among Filipino users.",
   "scripts": {
-    "build": "esbuild src/content.ts --bundle --outfile=dist/content.js --format=iife --target=es2020 && tailwindcss -i ./src/input.css -o ./content.css",
-    "watch": "concurrently \"esbuild src/content.ts --bundle --outfile=dist/content.js --format=iife --target=es2020 --watch\" \"tailwindcss -i ./src/input.css -o ./content.css --watch\"",
+    "build": "node build.mjs && tailwindcss -i ./src/input.css -o ./content.css",
+    "watch": "concurrently \"node build.mjs --watch\" \"tailwindcss -i ./src/input.css -o ./content.css --watch\"",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
