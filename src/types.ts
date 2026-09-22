@@ -4,6 +4,8 @@
 export interface PostData {
   author: string;    // display name with the "· Follow" suffix stripped
   verified: boolean; // true if Facebook shows a verified badge next to the name
+  authorUrl: string; // href of the author's profile/page link ("" if none found)
+  authorFollowCue: boolean; // name showed a "Follow" cue → suggested-Page hint
   text: string;      // full post text, emojis included
   links: string[];   // all external URLs found in the post
   timestamp: string; // relative time shown to the user (e.g. "3h", "1d")

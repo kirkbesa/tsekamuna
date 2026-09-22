@@ -27,17 +27,33 @@ function extractText(el: HTMLElement): string {
 // The verified badge is rendered as an SVG with an aria-label containing the
 // word "verified" — we detect any element with that pattern inside the
 // profile name container.
-function extractAuthor(postEl: HTMLElement): { author: string; verified: boolean } {
+function extractAuthor(postEl: HTMLElement): {
+  author: string;
+  verified: boolean;
+  authorUrl: string;
+  authorFollowCue: boolean;
+} {
   const profileEl = postEl.querySelector<HTMLElement>("[data-ad-rendering-role='profile_name']");
-  if (!profileEl) return { author: "", verified: false };
+  if (!profileEl) return { author: "", verified: false, authorUrl: "", authorFollowCue: false };
 
   const raw = profileEl.innerText?.trim() ?? "";
+  const followRe = /\s*[·•]?\s*Follow\s*$/i;
+  // A "· Follow" suffix marks an algorithmically suggested post from a Page the
+  // user doesn't follow — a strong hint the author is a Page, not a friend.
+  const authorFollowCue = followRe.test(raw);
   // Strip suffixes like " · Follow", "· Follow", "• Follow", " Follow"
-  const author = raw.replace(/\s*[·•]?\s*Follow\s*$/i, "").trim();
+  const author = raw.replace(followRe, "").trim();
 
   const verified = !!profileEl.querySelector('[aria-label*="erified" i]');
 
-  return { author, verified };
+  // The author's profile/page link. `profile.php?id=` reliably marks a personal
+  // profile; vanity URLs are ambiguous. Best-effort — verify against live DOM.
+  const anchor =
+    profileEl.querySelector<HTMLAnchorElement>("a[href]") ??
+    profileEl.closest<HTMLAnchorElement>("a[href]");
+  const authorUrl = anchor?.href ?? "";
+
+  return { author, verified, authorUrl, authorFollowCue };
 }
 
 // Clicks the "See more" button inside a post if present, then waits for
@@ -65,7 +81,7 @@ export async function extractPostData(postEl: HTMLElement): Promise<PostData> {
   const msgEl = postEl.querySelector<HTMLElement>("[data-ad-preview='message']");
   const text = msgEl ? extractText(msgEl) : "";
 
-  const { author, verified } = extractAuthor(postEl);
+  const { author, verified, authorUrl, authorFollowCue } = extractAuthor(postEl);
 
   // All http/https links inside the post. Many will be Facebook redirect URLs
   // (l.facebook.com/l.php?u=...) wrapping the actual destination.
@@ -80,5 +96,5 @@ export async function extractPostData(postEl: HTMLElement): Promise<PostData> {
       .querySelector<HTMLElement>("a[href*='?__cft__'] span")
       ?.innerText?.trim() ?? "";
 
-  return { author, verified, text, links, timestamp };
+  return { author, verified, authorUrl, authorFollowCue, text, links, timestamp };
 }
