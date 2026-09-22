@@ -48,7 +48,15 @@ async function processPost(postEl: HTMLElement): Promise<void> {
   postEl.dataset.tmSeen = "1";
 
   // Scope the extension to health content: non-health posts get no panel.
-  if (!(await isHealthPost(postData))) return;
+  const isHealth = await isHealthPost(postData);
+
+  // DEBUG: log the health decision for every post so we can verify the gate
+  // while testing. Remove once the classifier is trusted.
+  console.log(
+    `[TsekaMuna] health=${isHealth} — "${postData.text.slice(0, 80)}${postData.text.length > 80 ? "…" : ""}"`,
+  );
+
+  if (!isHealth) return;
 
   const analysis = analyzePost(postData, getLang());
   injectPanel(postEl, postData, analysis);
