@@ -10,7 +10,7 @@ import type { ClassifyHealthResponse, TmRequest } from "./messaging";
 
 // Fast, cheap model — fine for a yes/no classifier. Bump if you need more
 // nuance in the finer-grained category.
-const GEMINI_MODEL = "gemini-2.0-flash";
+const GEMINI_MODEL = "gemini-3.6-flash";
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 // Cap the text we send so a very long post can't blow up token usage.
@@ -52,6 +52,9 @@ async function classifyHealth(text: string): Promise<ClassifyHealthResponse> {
       contents: [{ parts: [{ text: HEALTH_PROMPT.replace("{TEXT}", key) }] }],
       generationConfig: {
         temperature: 0,
+        // gemini-3.6-flash is a reasoning model; a yes/no gate doesn't need
+        // chain-of-thought, so disable it to cut cost + latency per post.
+        thinkingConfig: { thinkingBudget: 0 },
         responseMimeType: "application/json",
         responseSchema: {
           type: "OBJECT",

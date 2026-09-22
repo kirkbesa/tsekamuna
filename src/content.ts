@@ -4,26 +4,7 @@
 import { analyzePost, classifyHealthContent } from "./analyzer";
 import { extractPostData } from "./extractor";
 import { getLang } from "./lang";
-import { createLimiter } from "./limit";
-import type { PostData } from "./types";
 import { injectPanel } from "./ui/panel";
-
-// Cap how many health classifications hit Gemini at once so fast scrolling
-// doesn't fire a burst of API calls.
-const classifyLimit = createLimiter(4);
-
-// Cache the classification per post text (stores the in-flight promise, so two
-// posts with identical text share a single API call).
-const healthCache = new Map<string, Promise<boolean>>();
-
-function isHealthPost(postData: PostData): Promise<boolean> {
-  let pending = healthCache.get(postData.text);
-  if (!pending) {
-    pending = classifyLimit(() => classifyHealthContent(postData));
-    healthCache.set(postData.text, pending);
-  }
-  return pending;
-}
 
 // Runs the full pipeline for a single post: skip guards → extract data
 // → health gate → run analysis → inject the credibility panel.
@@ -42,19 +23,19 @@ async function processPost(postEl: HTMLElement): Promise<void> {
   // and on posts that contain only an emoji or sticker.
   if (!postData.text) return;
 
-  // Classify each post once, even non-health ones (which never get a .tm-card),
-  // so the observer doesn't re-trigger a Gemini call on every feed mutation.
+  // Process each post once, even non-health ones (which never get a .tm-card),
+  // so the observer doesn't re-run the gate on every feed mutation (and to keep
+  // the debug log from repeating).
   if (postEl.dataset.tmSeen) return;
   postEl.dataset.tmSeen = "1";
 
   // Scope the extension to health content: non-health posts get no panel.
-  const isHealth = await isHealthPost(postData);
+  const isHealth = classifyHealthContent(postData);
 
   // DEBUG: log the health decision for every post so we can verify the gate
   // while testing. Remove once the classifier is trusted.
-  console.log(
-    `[TsekaMuna] health=${isHealth} — "${postData.text.slice(0, 80)}${postData.text.length > 80 ? "…" : ""}"`,
-  );
+  const snippet = `${postData.text.slice(0, 80)}${postData.text.length > 80 ? "…" : ""}`;
+  console.log(`[TsekaMuna] health=${isHealth} — "${snippet}"`);
 
   if (!isHealth) return;
 
