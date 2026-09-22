@@ -44,9 +44,10 @@ const watch = process.argv.includes("--watch");
 
 /** @type {import("esbuild").BuildOptions} */
 const options = {
-  entryPoints: ["src/content.ts"],
+  // content.js runs in the page; background.js is the service worker.
+  entryPoints: ["src/content.ts", "src/background.ts"],
   bundle: true,
-  outfile: "dist/content.js",
+  outdir: "dist",
   format: "iife",
   target: "es2020",
   define: {

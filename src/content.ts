@@ -4,10 +4,29 @@
 import { analyzePost, classifyHealthContent } from "./analyzer";
 import { extractPostData } from "./extractor";
 import { getLang } from "./lang";
+import { createLimiter } from "./limit";
+import type { PostData } from "./types";
 import { injectPanel } from "./ui/panel";
 
+// Cap how many health classifications hit Gemini at once so fast scrolling
+// doesn't fire a burst of API calls.
+const classifyLimit = createLimiter(4);
+
+// Cache the classification per post text (stores the in-flight promise, so two
+// posts with identical text share a single API call).
+const healthCache = new Map<string, Promise<boolean>>();
+
+function isHealthPost(postData: PostData): Promise<boolean> {
+  let pending = healthCache.get(postData.text);
+  if (!pending) {
+    pending = classifyLimit(() => classifyHealthContent(postData));
+    healthCache.set(postData.text, pending);
+  }
+  return pending;
+}
+
 // Runs the full pipeline for a single post: skip guards → extract data
-// → run analysis → inject the credibility panel.
+// → health gate → run analysis → inject the credibility panel.
 async function processPost(postEl: HTMLElement): Promise<void> {
   // Facebook marks off-screen posts as virtualized — they have a placeholder
   // height but no rendered content yet, so there is nothing to extract.
@@ -23,8 +42,13 @@ async function processPost(postEl: HTMLElement): Promise<void> {
   // and on posts that contain only an emoji or sticker.
   if (!postData.text) return;
 
+  // Classify each post once, even non-health ones (which never get a .tm-card),
+  // so the observer doesn't re-trigger a Gemini call on every feed mutation.
+  if (postEl.dataset.tmSeen) return;
+  postEl.dataset.tmSeen = "1";
+
   // Scope the extension to health content: non-health posts get no panel.
-  if (!classifyHealthContent(postData)) return;
+  if (!(await isHealthPost(postData))) return;
 
   const analysis = analyzePost(postData, getLang());
   injectPanel(postEl, postData, analysis);

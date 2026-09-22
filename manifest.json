@@ -6,6 +6,12 @@
 
   "permissions": [],
 
+  "host_permissions": ["https://generativelanguage.googleapis.com/*"],
+
+  "background": {
+    "service_worker": "dist/background.js"
+  },
+
   "content_scripts": [
     {
       "matches": ["*://*.facebook.com/*"],
